@@ -425,7 +425,7 @@ const { url } = await startStandaloneServer(server, {
         });
         return check;
     },
-    listen: { port: 4000 },
+    listen: { port: process.env.PORT||4000 },
 });
 
 //following the way of youtube
