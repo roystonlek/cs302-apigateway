@@ -5,7 +5,8 @@ export class ClaimsAPI extends RESTDataSource {
         // Always call super()
         super();
         // Sets the base URL for the REST API
-        this.baseURL = "http://18.142.162.74:31000/";
+        this.baseURL = "http://13.213.102.107:31000/";
+        // this.baseURL = "http://localhost:5000/";
     }
 
     //specific claims

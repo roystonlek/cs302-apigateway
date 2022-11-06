@@ -4,8 +4,10 @@ export class AssetsAPI extends RESTDataSource {
     constructor() {
         // Always call super()
         super();
-        // Sets the base URL for the REST API
-        this.baseURL = "http://18.142.162.74:30002/";
+        // Sets the base URL for the REST API prod
+        this.baseURL = "http://13.213.102.107:30002/";
+        // dev
+        // this.baseURL = "http://localhost:8080/";
     }
 
     async getAsset(id) {

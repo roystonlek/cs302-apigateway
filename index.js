@@ -5,7 +5,17 @@ import { AssetsAPI } from "./assets-api.js";
 import { RequestsAPI } from "./requests-api.js";
 import { UsersAPI } from "./users-api.js";
 import { ClaimsAPI } from "./claims-api.js";
+
 import axios from "axios";
+import cors from "cors";
+import express from "express";
+import { expressMiddleware } from "@apollo/server/express4";
+import http from "http";
+import pkg from 'body-parser';
+const { json } = pkg;
+import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
+import { resolve } from "dns";
+// import cors from 'cors';
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
 // your data.
@@ -174,123 +184,178 @@ const resolvers = {
             return dataSources.requestsAPI.getRequest(id);
         },
         requests: async (_, __, { user, dataSources }) => {
-            if (user == undefined || !(user.role.includes("Admin") || user.role.includes("Exco")) ){
-                throw new GraphQLError("You are not authorized to view this resource", {
-                    extensions: {
-                        code: "UNAUTHORIZED",
-                        http: { status: 403 },
-                    },
-                });
+            if (
+                user == undefined ||
+                !(user.role.includes("Admin") || user.role.includes("Exco"))
+            ) {
+                throw new GraphQLError(
+                    "You are not authorized to view this resource",
+                    {
+                        extensions: {
+                            code: "UNAUTHORIZED",
+                            http: { status: 403 },
+                        },
+                    }
+                );
             }
             return dataSources.requestsAPI.getAllRequests();
         },
-        requestsByClub: async (_, { club }, {user, dataSources }) => {
+        requestsByClub: async (_, { club }, { user, dataSources }) => {
             return dataSources.requestsAPI.getRequestByClub(club);
         },
-        requestsByAssetName: async (_, { assetName }, {user, dataSources }) => {
-            if (user == undefined || !(user.role.includes("Admin") || user.role.includes("Exco")) ){
-                throw new GraphQLError("You are not authorized to view this resource", {
-                    extensions: {
-                        code: "UNAUTHORIZED",
-                        http: { status: 403 },
-                    },
-                });
+        requestsByAssetName: async (
+            _,
+            { assetName },
+            { user, dataSources }
+        ) => {
+            if (
+                user == undefined ||
+                !(user.role.includes("Admin") || user.role.includes("Exco"))
+            ) {
+                throw new GraphQLError(
+                    "You are not authorized to view this resource",
+                    {
+                        extensions: {
+                            code: "UNAUTHORIZED",
+                            http: { status: 403 },
+                        },
+                    }
+                );
             }
             return dataSources.requestsAPI.getRequestByAssetName(assetName);
         },
         //users resolvers
         users: (_, __, { user, dataSources }) => {
             if (user == undefined || !user.role.includes("Admin")) {
-                throw new GraphQLError("You are not authorized to view this resource", {
-                    extensions: {
-                        code: "UNAUTHORIZED",
-                        http: { status: 403 },
-                    },
-                });
+                throw new GraphQLError(
+                    "You are not authorized to view this resource",
+                    {
+                        extensions: {
+                            code: "UNAUTHORIZED",
+                            http: { status: 403 },
+                        },
+                    }
+                );
             }
             return dataSources.usersAPI.getAllUsers();
         },
         user: async (_, { id }, { dataSources }) => {
             return dataSources.usersAPI.getUser(id);
         },
-        userByClub: async (_, { club }, {user, dataSources }) => {
-            if (user == undefined || !(user.role.includes("Admin") || user.role.includes("Exco")) ){
-                throw new GraphQLError("You are not authorized to view this resource", {
-                    extensions: {
-                        code: "UNAUTHORIZED",
-                        http: { status: 403 },
-                    },
-                });
+        userByClub: async (_, { club }, { user, dataSources }) => {
+            if (
+                user == undefined ||
+                !(user.role.includes("Admin") || user.role.includes("Exco"))
+            ) {
+                throw new GraphQLError(
+                    "You are not authorized to view this resource",
+                    {
+                        extensions: {
+                            code: "UNAUTHORIZED",
+                            http: { status: 403 },
+                        },
+                    }
+                );
             }
             return dataSources.usersAPI.getUserByClub(club);
         },
         //claims resolvers
-        claims: async (_, __, { user , dataSources }) => {
-            if (user == undefined || !(user.role.includes("Admin")) ){
-                throw new GraphQLError("You are not authorized to view this resource", {
-                    extensions: {
-                        code: "UNAUTHORIZED",
-                        http: { status: 403 },
-                    },
-                });
+        claims: async (_, __, { user, dataSources }) => {
+            if (user == undefined || !user.role.includes("Admin")) {
+                throw new GraphQLError(
+                    "You are not authorized to view this resource",
+                    {
+                        extensions: {
+                            code: "UNAUTHORIZED",
+                            http: { status: 403 },
+                        },
+                    }
+                );
             }
             return dataSources.claimsAPI.getAllClaims();
         },
         claimById: async (_, { id }, { user, dataSources }) => {
-            if (user == undefined || !(user.role.includes("Admin") || user.role.includes("Exco")) ){
-                throw new GraphQLError("You are not authorized to view this resource", {
-                    extensions: {
-                        code: "UNAUTHORIZED",
-                        http: { status: 403 },
-                    },
-                });
+            if (
+                user == undefined ||
+                !(user.role.includes("Admin") || user.role.includes("Exco"))
+            ) {
+                throw new GraphQLError(
+                    "You are not authorized to view this resource",
+                    {
+                        extensions: {
+                            code: "UNAUTHORIZED",
+                            http: { status: 403 },
+                        },
+                    }
+                );
             }
             return dataSources.claimsAPI.getClaim(id);
         },
     },
     Mutation: {
         addAsset: async (_, { asset }, { user, dataSources }) => {
-            if (user == undefined || !(user.role.includes("Admin") || user.role.includes("Exco")) ){
+            if (
+                user == undefined ||
+                !(user.role.includes("Admin") || user.role.includes("Exco"))
+            ) {
                 console.log(user.role);
-                throw new GraphQLError("You are not authorized to view this resource", {
-                    extensions: {
-                        code: "UNAUTHORIZED",
-                        http: { status: 403 },
-                    },
-                });
+                throw new GraphQLError(
+                    "You are not authorized to view this resource",
+                    {
+                        extensions: {
+                            code: "UNAUTHORIZED",
+                            http: { status: 403 },
+                        },
+                    }
+                );
             }
             return dataSources.assetsAPI.addAsset(asset);
         },
         updateAsset: async (_, { id, asset }, { user, dataSources }) => {
-            if (user == undefined || !(user.role.includes("Admin") || user.role.includes("Exco")) ){
-                throw new GraphQLError("You are not authorized to view this resource", {
-                    extensions: {
-                        code: "UNAUTHORIZED",
-                        http: { status: 403 },
-                    },
-                });
+            if (
+                user == undefined ||
+                !(user.role.includes("Admin") || user.role.includes("Exco"))
+            ) {
+                throw new GraphQLError(
+                    "You are not authorized to view this resource",
+                    {
+                        extensions: {
+                            code: "UNAUTHORIZED",
+                            http: { status: 403 },
+                        },
+                    }
+                );
             }
             return dataSources.assetsAPI.updateAsset(id, asset);
         },
-        loanAsset: async (_, { id, asset }, {user, dataSources }) => {
-            if (user == undefined || !user.role.includes("Exco")){
-                throw new GraphQLError("You are not authorized to view this resource", {
-                    extensions: {
-                        code: "UNAUTHORIZED",
-                        http: { status: 403 },
-                    },
-                });
+        loanAsset: async (_, { id, asset }, { user, dataSources }) => {
+            if (user == undefined || !user.role.includes("Exco")) {
+                throw new GraphQLError(
+                    "You are not authorized to view this resource",
+                    {
+                        extensions: {
+                            code: "UNAUTHORIZED",
+                            http: { status: 403 },
+                        },
+                    }
+                );
             }
             return dataSources.assetsAPI.loanAsset(id, asset);
         },
-        deleteAsset: async (_, { id }, { user , dataSources }) => {
-            if (user == undefined || !(user.role.includes("Admin") || user.role.includes("Exco")) ){
-                throw new GraphQLError("You are not authorized to view this resource", {
-                    extensions: {
-                        code: "UNAUTHORIZED",
-                        http: { status: 403 },
-                    },
-                });
+        deleteAsset: async (_, { id }, { user, dataSources }) => {
+            if (
+                user == undefined ||
+                !(user.role.includes("Admin") || user.role.includes("Exco"))
+            ) {
+                throw new GraphQLError(
+                    "You are not authorized to view this resource",
+                    {
+                        extensions: {
+                            code: "UNAUTHORIZED",
+                            http: { status: 403 },
+                        },
+                    }
+                );
             }
             return dataSources.assetsAPI.deleteAsset(id);
         },
@@ -301,14 +366,20 @@ const resolvers = {
         updateRequest: async (_, { id, request }, { dataSources }) => {
             return dataSources.requestsAPI.updateRequest(id, request);
         },
-        approveRequest: async (_, { id, request }, {user,  dataSources }) => {
-            if (user == undefined || !(user.role.includes("Admin") || user.role.includes("Exco")) ){
-                throw new GraphQLError("You are not authorized to view this resource", {
-                    extensions: {
-                        code: "UNAUTHORIZED",
-                        http: { status: 403 },
-                    },
-                });
+        approveRequest: async (_, { id, request }, { user, dataSources }) => {
+            if (
+                user == undefined ||
+                !(user.role.includes("Admin") || user.role.includes("Exco"))
+            ) {
+                throw new GraphQLError(
+                    "You are not authorized to view this resource",
+                    {
+                        extensions: {
+                            code: "UNAUTHORIZED",
+                            http: { status: 403 },
+                        },
+                    }
+                );
             }
             return dataSources.requestsAPI.approveRequest(id, request);
         },
@@ -329,36 +400,54 @@ const resolvers = {
             return dataSources.usersAPI.deleteUser(id);
         },
         //claims
-        addClaim: async (_, { claim }, {user, dataSources }) => {
-            if (user == undefined || !(user.role.includes("Admin") || user.role.includes("Exco")) ){
-                throw new GraphQLError("You are not authorized to view this resource", {
-                    extensions: {
-                        code: "UNAUTHORIZED",
-                        http: { status: 403 },
-                    },
-                });
+        addClaim: async (_, { claim }, { user, dataSources }) => {
+            if (
+                user == undefined ||
+                !(user.role.includes("Admin") || user.role.includes("Exco"))
+            ) {
+                throw new GraphQLError(
+                    "You are not authorized to view this resource",
+                    {
+                        extensions: {
+                            code: "UNAUTHORIZED",
+                            http: { status: 403 },
+                        },
+                    }
+                );
             }
             return dataSources.claimsAPI.addClaim(claim);
         },
-        updateClaim: async (_, { id, claim }, {user, dataSources }) => {
-            if (user == undefined || !(user.role.includes("Admin") || user.role.includes("Exco")) ){
-                throw new GraphQLError("You are not authorized to view this resource", {
-                    extensions: {
-                        code: "UNAUTHORIZED",
-                        http: { status: 403 },
-                    },
-                });
+        updateClaim: async (_, { id, claim }, { user, dataSources }) => {
+            if (
+                user == undefined ||
+                !(user.role.includes("Admin") || user.role.includes("Exco"))
+            ) {
+                throw new GraphQLError(
+                    "You are not authorized to view this resource",
+                    {
+                        extensions: {
+                            code: "UNAUTHORIZED",
+                            http: { status: 403 },
+                        },
+                    }
+                );
             }
             return dataSources.claimsAPI.updateClaim(id, claim);
         },
-        deleteClaim: async (_, { id }, { user , dataSources }) => {
-            if (user == undefined || !(user.role.includes("Admin") || user.role.includes("Exco")) ){
-                throw new GraphQLError("You are not authorized to view this resource", {
-                    extensions: {
-                        code: "UNAUTHORIZED",
-                        http: { status: 403 },
-                    },
-                });
+        deleteClaim: async (_, { id }, { user, dataSources }) => {
+            if (
+                user == undefined ||
+                !(user.role.includes("Admin") || user.role.includes("Exco"))
+            ) {
+                throw new GraphQLError(
+                    "You are not authorized to view this resource",
+                    {
+                        extensions: {
+                            code: "UNAUTHORIZED",
+                            http: { status: 403 },
+                        },
+                    }
+                );
             }
             return dataSources.claimsAPI.deleteClaim(id);
         },
@@ -368,23 +457,23 @@ const resolvers = {
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
 
-const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-});
+// const server = new ApolloServer({
+//     typeDefs,
+//     resolvers,
+// });
 
 // Passing an ApolloServer instance to the `startStandaloneServer` function:
 //  1. creates an Express app
 //  2. installs your ApolloServer instance as middleware
 //  3. prepares your app to handle incoming requests
-async function getUser(token,body) {
+async function getUser(token, body) {
     // /login
     var details = token.split(" ")[1];
     var username = details.split(":")[0];
     var password = details.split(":")[1];
     // console.log(username, password);
     return axios
-        .post("http://18.142.162.74:30000/login", {
+        .post("http://13.213.102.107:30000/login", {
             id: username,
             password: password,
         })
@@ -396,41 +485,91 @@ async function getUser(token,body) {
         });
 }
 
-const { url } = await startStandaloneServer(server, {
-    context: async ({ req }) => {
-        const { cache } = server;
-        // console.log(req.headers)
-        const token = req.headers.authorization || "";
-        const body = req.body;
-        // need to implement this user
-        // console.log(token);
-        console.log(token);
-        const check = getUser(token,body).then((response) => {
-            if (!response)
-                // throwing a `GraphQLError` here allows us to specify an HTTP status code,
-                // standard `Error`s will have a 500 status code by default
-                throw new GraphQLError("Authentication Error", {
-                    extensions: {
-                        code: "UNAUTHENTICATED",
-                        http: { status: 401 },
-                    },
-                });
-            const user = response;
-            return {
-                user,
-                dataSources: {
-                    assetsAPI: new AssetsAPI({ cache }),
-                    requestsAPI: new RequestsAPI({ cache }),
-                    usersAPI: new UsersAPI({ cache }),
-                    claimsAPI: new ClaimsAPI({ cache }),
-                },
-            };
-        });
-        return check;
-    },
-    listen: { port: process.env.PORT||4000 },
+const app = express();
+const httpServer = http.createServer(app);
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 });
+
+await server.start();
+
+app.use(
+    cors(),
+    json(),
+    expressMiddleware(server, {
+        context: async ({ req }) => {
+            const { cache } = server;
+            // console.log(req.headers)
+            const token = req.headers.authorization || "";
+            const body = req.body;
+            // need to implement this user
+            // console.log(token);
+            console.log(token);
+            const check = getUser(token, body).then((response) => {
+                if (!response)
+                    // throwing a `GraphQLError` here allows us to specify an HTTP status code,
+                    // standard `Error`s will have a 500 status code by default
+                    throw new GraphQLError("Authentication Error", {
+                        extensions: {
+                            code: "UNAUTHENTICATED",
+                            http: { status: 401 },
+                        },
+                    });
+                const user = response;
+                return {
+                    user,
+                    dataSources: {
+                        assetsAPI: new AssetsAPI({ cache }),
+                        requestsAPI: new RequestsAPI({ cache }),
+                        usersAPI: new UsersAPI({ cache }),
+                        claimsAPI: new ClaimsAPI({ cache }),
+                    },
+                };
+            });
+            return check;
+        },
+        listen: { port: process.env.PORT || 4000 },
+    })
+);
+
+await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
+// const { url } = await startStandaloneServer(server, {
+//     context: async ({ req }) => {
+//         const { cache } = server;
+//         // console.log(req.headers)
+//         const token = req.headers.authorization || "";
+//         const body = req.body;
+//         // need to implement this user
+//         // console.log(token);
+//         console.log(token);
+//         const check = getUser(token,body).then((response) => {
+//             if (!response)
+//                 // throwing a `GraphQLError` here allows us to specify an HTTP status code,
+//                 // standard `Error`s will have a 500 status code by default
+//                 throw new GraphQLError("Authentication Error", {
+//                     extensions: {
+//                         code: "UNAUTHENTICATED",
+//                         http: { status: 401 },
+//                     },
+//                 });
+//             const user = response;
+//             return {
+//                 user,
+//                 dataSources: {
+//                     assetsAPI: new AssetsAPI({ cache }),
+//                     requestsAPI: new RequestsAPI({ cache }),
+//                     usersAPI: new UsersAPI({ cache }),
+//                     claimsAPI: new ClaimsAPI({ cache }),
+//                 },
+//             };
+//         });
+//         return check;
+//     },
+//     listen: { port: process.env.PORT||4000 },
+// });
 
 //following the way of youtube
 
-console.log(`🚀  Server ready at: ${url}`);
+console.log(`🚀  Server ready at: ${resolve}`);
