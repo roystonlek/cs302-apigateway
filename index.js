@@ -530,11 +530,11 @@ app.use(
             });
             return check;
         },
-        listen: { port: process.env.PORT || 4000 },
+        // listen: { port: process.env.PORT || 4000 },
     })
 );
 
-await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
+await new Promise((resolve) => httpServer.listen({port: process.env.PORT || 4000 }, resolve));
 // const { url } = await startStandaloneServer(server, {
 //     context: async ({ req }) => {
 //         const { cache } = server;
