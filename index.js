@@ -127,6 +127,7 @@ const typeDefs = `#graphql
         claim_amount: Float!
         claim_docs: String!
         status: String!
+        remarks: String
     }
     input ClaimInput{
         claim_id: ID
@@ -136,6 +137,7 @@ const typeDefs = `#graphql
         claim_amount: Float
         claim_docs: String
         status: String
+        remarks: String
     }
     type Query {
         claims: [Claim]
