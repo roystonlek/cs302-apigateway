@@ -375,14 +375,14 @@ const server = new ApolloServer({
 //  1. creates an Express app
 //  2. installs your ApolloServer instance as middleware
 //  3. prepares your app to handle incoming requests
-async function getUser(token) {
+async function getUser(token,body) {
     // /login
     var details = token.split(" ")[1];
     var username = details.split(":")[0];
     var password = details.split(":")[1];
     // console.log(username, password);
     return axios
-        .post("http://localhost:8082/login", {
+        .post("http://18.142.162.74:30000/login", {
             id: username,
             password: password,
         })
@@ -399,10 +399,11 @@ const { url } = await startStandaloneServer(server, {
         const { cache } = server;
         // console.log(req.headers)
         const token = req.headers.authorization || "";
+        const body = req.body;
         // need to implement this user
         // console.log(token);
         console.log(token);
-        const check = getUser(token).then((response) => {
+        const check = getUser(token,body).then((response) => {
             if (!response)
                 // throwing a `GraphQLError` here allows us to specify an HTTP status code,
                 // standard `Error`s will have a 500 status code by default

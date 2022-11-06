@@ -5,7 +5,7 @@ export class AssetsAPI extends RESTDataSource {
         // Always call super()
         super();
         // Sets the base URL for the REST API
-        this.baseURL = "http://localhost:8080/";
+        this.baseURL = "http://18.142.162.74:30002/";
     }
 
     async getAsset(id) {
