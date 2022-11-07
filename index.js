@@ -15,7 +15,9 @@ import pkg from 'body-parser';
 const { json } = pkg;
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import { resolve } from "dns";
-// import cors from 'cors';
+import rabbit from './publisher.js';
+
+
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
 // your data.
@@ -66,7 +68,7 @@ const typeDefs = `#graphql
   type Mutation {
     addRequest(request: RequestInput!): Request
     updateRequest(id: ID!, request: RequestInput): Request!
-    approveRequest(id: ID!, request: RequestInput): Request!
+    approveRequest( email:String! , id: ID!, request: RequestInput): Request!
     deleteRequest(id: ID!): Boolean!
   }
 
@@ -155,7 +157,7 @@ const typeDefs = `#graphql
     }
     type Mutation {
         addClaim(claim: ClaimInput!): Claim
-        updateClaim(id: ID!, claim: ClaimInput): Claim!
+        updateClaim(email:String!, id: ID!, claim: ClaimInput): Claim!
         deleteClaim(id: ID!): Claim
     }
 
@@ -366,7 +368,9 @@ const resolvers = {
         updateRequest: async (_, { id, request }, { dataSources }) => {
             return dataSources.requestsAPI.updateRequest(id, request);
         },
-        approveRequest: async (_, { id, request }, { user, dataSources }) => {
+                //after approving send the email 
+        approveRequest: async (_, { email ,id, request }, { rabbit , user, dataSources }) => {
+            console.log("index");
             if (
                 user == undefined ||
                 !(user.role.includes("Admin") || user.role.includes("Exco"))
@@ -381,6 +385,12 @@ const resolvers = {
                     }
                 );
             }
+            const result = await dataSources.requestsAPI.approveRequest(id, request);
+            console.log("result is here "+result);
+            console.log(JSON.stringify(result));
+            var emails = `{"email": "${email}" , "status": "approved" , "type":"request" , "data":${JSON.stringify(result)}}`
+            console.log(emails);
+            rabbit.sendMsg("notifications.topic", "claims.test",emails);
             return dataSources.requestsAPI.approveRequest(id, request);
         },
         deleteRequest: async (_, { id }, { dataSources }) => {
@@ -417,7 +427,7 @@ const resolvers = {
             }
             return dataSources.claimsAPI.addClaim(claim);
         },
-        updateClaim: async (_, { id, claim }, { user, dataSources }) => {
+        updateClaim: async (_, {email, id, claim }, { user, dataSources }) => {
             if (
                 user == undefined ||
                 !(user.role.includes("Admin") || user.role.includes("Exco"))
@@ -432,6 +442,13 @@ const resolvers = {
                     }
                 );
             }
+            console.log("index")
+            const result = await dataSources.claimsAPI.updateClaim(id, claim);
+            console.log("result is here "+result);
+            console.log(JSON.stringify(result));
+            var emails = `{"email": "${email}" , "status": "approved" , "type":"claim" ,"data":${JSON.stringify(result)}}`
+            console.log(emails);
+            rabbit.sendMsg("notifications.topic", "claims.test",emails);
             return dataSources.claimsAPI.updateClaim(id, claim);
         },
         deleteClaim: async (_, { id }, { user, dataSources }) => {
@@ -473,7 +490,8 @@ async function getUser(token, body) {
     var password = details.split(":")[1];
     // console.log(username, password);
     return axios
-        .post("http://13.213.102.107:30000/login", {
+        // .post("http://13.213.102.107:30000/login", {
+        .post("http://localhost:8082/login", {
             id: username,
             password: password,
         })
@@ -502,11 +520,13 @@ app.use(
         context: async ({ req }) => {
             const { cache } = server;
             // console.log(req.headers)
+
+
             const token = req.headers.authorization || "";
             const body = req.body;
             // need to implement this user
             // console.log(token);
-            console.log(token);
+            // console.log(token);
             const check = getUser(token, body).then((response) => {
                 if (!response)
                     // throwing a `GraphQLError` here allows us to specify an HTTP status code,
@@ -517,8 +537,9 @@ app.use(
                             http: { status: 401 },
                         },
                     });
-                const user = response;
+                    const user = response;
                 return {
+                    rabbit,
                     user,
                     dataSources: {
                         assetsAPI: new AssetsAPI({ cache }),

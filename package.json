@@ -13,6 +13,7 @@
   "dependencies": {
     "@apollo/datasource-rest": "^4.3.2",
     "@apollo/server": "^4.0.3",
+    "amqplib": "^0.9.1",
     "apollo-datasource-rest": "^3.7.0",
     "apollo-server-express": "^3.10.3",
     "axios": "^1.1.3",

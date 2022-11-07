@@ -5,8 +5,8 @@ export class ClaimsAPI extends RESTDataSource {
         // Always call super()
         super();
         // Sets the base URL for the REST API
-        this.baseURL = "http://13.213.102.107:31000/";
-        // this.baseURL = "http://localhost:5000/";
+        // this.baseURL = "http://13.213.102.107:31000/";
+        this.baseURL = "http://127.0.0.1:5000/";
     }
 
     //specific claims
@@ -27,7 +27,8 @@ export class ClaimsAPI extends RESTDataSource {
     //update claims
     async updateClaim(id, claims) {
         var claimsJson = JSON.parse(JSON.stringify(claims));
-        return this.patch(`claims/${id}`, { body: claims });
+        console.log("api");
+        return this.patch(`claims/${id}`, { body: claimsJson });
     }
     //delete claims
     async deleteClaim(id) {
