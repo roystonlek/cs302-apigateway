@@ -1,5 +1,4 @@
 import { RESTDataSource } from '@apollo/datasource-rest';
-import rabbit from './rabbitmq.js';
 
 export class RequestsAPI extends RESTDataSource {
   constructor() {

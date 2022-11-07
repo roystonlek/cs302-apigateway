@@ -593,4 +593,4 @@ await new Promise((resolve) => httpServer.listen({port: process.env.PORT || 4000
 
 //following the way of youtube
 
-console.log(`🚀  Server ready at: ${resolve}`);
+console.log(`🚀  Server ready `);
